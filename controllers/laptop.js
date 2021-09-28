@@ -1,10 +1,20 @@
+const BrandLaptop = require("../models/BrandLaptop");
 const Laptop = require("../models/Laptop");
 
 module.exports = {
   create: async (req, res) => {
     const body = req.body;
     try {
+      const brand = await BrandLaptop.findById(body.brand)
+      if(!brand){
+        return res.status(404).json({
+          status : "not found",
+          message : "The brand with given id is not found"
+        })
+      }
       const saveLaptop = await Laptop.create(body);
+      await brand.laptops.unshift(saveLaptop._id)
+      await brand.save()
       const getLaptop = await Laptop.findById(saveLaptop.id).populate("brand", ["name", "year"]);
       return res.status(201).json({
         status: "success",
